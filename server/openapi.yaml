@@ -1,0 +1,577 @@
+openapi: 3.0.1
+info:
+  title: Delilah Resto
+  description: Ejemplo de API de un restaurante.
+  contact:
+    email: fioriniagustin@gmail.com
+  version: 1.0.0
+externalDocs:
+  description: Github Repository
+  url: https://github.com/AgustinFio/DelilahResto
+servers:
+  - url: https://localhost:3000/
+
+tags:
+  - name: User
+    description: Operaciones sobre Usuarios
+  - name: Productos
+    description: Operaciones sobre Productos
+  - name: Ordenes
+    description: Operaciones sobre Ordenes
+
+paths:
+  /registro:
+    post:
+      tags:
+        - User
+      summary: Crea un nuevo usuario nuevo
+      description: Crea un usuario nuevo, lo añade a la base de datos.
+      operationId: crearUsuario
+      requestBody:
+        description: Objeto de usuario creado
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+        required: true
+      security: []
+      responses:
+        200:
+          description: "{newUserInfo}"
+        400:
+          description: "Username invalido// Debe proporcionar todos los campos correspondientes"
+        500:
+          $ref: "#/components/responses/Default"
+
+  /login:
+    get:
+      tags:
+        - User
+      security: []
+      summary: Inicio de sesion
+      operationId: inicioSesion
+      parameters:
+        - name: username
+          in: query
+          description: username requerido para login
+          required: true
+          schema:
+            type: string
+        - name: password
+          in: query
+          description: contraseña requerida para login
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Devuelve Token al usuario que inicio sesion..
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Token"
+        404:
+          description: No se encontro el usuario
+        
+        500:
+          $ref: "#/components/responses/Default"
+  /productos:
+    get:
+      tags:
+        - Productos
+      summary: Listado de productos
+      description: Devuelve lista de productos
+      operationId: getProducts
+      responses:
+        200:
+          description: "Listado De Productos"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Productos"
+        500:
+          $ref: "#/components/responses/Default"
+
+    post:
+      tags:
+        - Productos
+      summary: Añade producto (Solo si es administrador)
+      description: Añade producto a base de datos
+      operationId: addProduct
+      requestBody:
+        description: Parametros a especificar
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Producto"
+        required: true
+      responses:
+        200:
+          description: Producto añadido correctamente
+          content:
+            application/json:
+              schema:
+                items:
+                  type: string
+                  example: "Producto creado"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        500:
+          $ref: "#/components/responses/Default"
+
+  /productos/:id:
+    get:
+      tags:
+        - Productos
+      summary: Obtiene producto por su ID
+      description: Devuelve un producto determinado de acuerdo al ID
+      parameters:
+        - name: id
+          in: path
+          description: ID del producto
+          required: true
+          schema:
+            type: string
+      operationId: getProductById
+      responses:
+        200:
+          description: Producto traido por su ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Producto"
+        404:
+          description: La busqueda no trajo resultados
+        500:
+          $ref: "#/components/responses/Default"
+
+    put:
+      tags:
+        - Productos
+      summary: Editar producto, solo un admin puede hacerlo.
+      description: Edita producto de acuerdo a su ID
+      parameters:
+        - name: id
+          in: path
+          description: ID del producto
+          required: true
+          schema:
+            type: string
+      operationId: editarProducto
+      requestBody:
+        description: Datos del producto a modificar
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Producto"
+        required: true
+      responses:
+        201:
+          description: Producto modificado correctamente
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        
+        500:
+          $ref: "#/components/responses/Default"
+
+    delete:
+      tags:
+        - Productos
+      summary: Elimina el producto especificado mediante ID
+      description: Elimina el producto de acuerdo a su ID
+      parameters:
+        - name: id
+          in: path
+          description: El ID del producto que se quiere eliminar
+          required: true
+          schema:
+            type: string
+      operationId: deleteProduct
+      responses:
+        200:
+          description: Producto eliminado exitosamente.
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        500:
+          $ref: "#/components/responses/Default"
+
+  /ordenes:
+    get:
+      tags:
+        - Ordenes
+      summary: Lista de ordenes
+      description: Devuelve ordenes de acuerdo al rol. El administrador puede acceder a todas y cada usuario puede acceder a sus propias ordenes.
+      operationId: getOrders
+      responses:
+        200:
+          description: Lista de ordenes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ordenes"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        500:
+          $ref: "#/components/responses/Default"
+
+    post:
+      tags:
+        - Ordenes
+      summary: Añade orden a la base de datos
+      description: Añade orden a la base de datos
+      operationId: addOrder
+      requestBody:
+        description: Estructura de la orden
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NuevaOrden"
+        required: true
+      responses:
+        200:
+          description: Su pedido se ha realizado correctamente
+        500:
+          $ref: "#/components/responses/Default"
+
+  /ordenes/:id:
+    get:
+      tags:
+        - Ordenes
+      summary: Orden por ID
+      parameters:
+        - name: id
+          in: path
+          description: ID de la orden
+          required: true
+          schema:
+            type: string
+      description: Devuelve la orden especificada mediante ID
+      operationId: getOrderById
+      responses:
+        200:
+          description: Devuelve los detalles de la orden solicitada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrdenesPorID"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/Default"
+
+    put:
+      tags:
+        - Ordenes
+      summary: Edita una orden por su ID, solo si es administrador
+      description: Edicion de orden
+      operationId: editarOrden
+      parameters:
+        - name: id
+          in: path
+          description: El ID de la orden
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Orden a crear
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                Status:
+                  type: string
+                  example: delivered
+        required: true
+      responses:
+        200:
+          description: "Estado de orden {order_id} modificado correctamente"
+        
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          description: Estado de orden no valido
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/Default"
+        
+    delete:
+      tags:
+        - Ordenes
+      summary: Elimina pedido
+      description: Elimina el pedido de acuerdo a su ID
+      parameters:
+        - name: id
+          in: path
+          description: El ID del pedido que se quiere eliminar
+          required: true
+          schema:
+            type: string
+      operationId: deleteOrder
+      responses:
+        200:
+          description: La orden numero ${order_id} fue eliminada correctamente
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        500:
+          $ref: "#/components/responses/Default"
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 10
+        username:
+          type: string
+          example: ChesterBenning
+        password:
+          type: string
+          example: JamonAndCheese
+        email:
+          type: string
+          example: chesterbenning@gmail.com
+        delivery_address:
+          type: string
+          example: Avenida Libertador 488
+        full_name:
+          type: string
+          example: Chester Bennington
+        phone:
+          type: integer
+          example: 549119898989
+    UserInfo:
+      type: array
+      items:
+        type: object
+        properties:
+          user_id:
+            type: integer
+            example: 4
+          username:
+            type: string
+            example: mati_as
+          full_name:
+            type: string
+            example: Matias Gonzalez
+          email:
+            type: string
+            example: mati_as@gmail.com
+          phone:
+            type: integer
+            example: 1162029823
+          delivery_address:
+            type: string
+            example: Suipacha 12
+          admin:
+            type: boolean
+            example: 0
+    Producto:
+      type: object
+      properties:
+        product_id:
+          type: integer
+          example: 4
+        name:
+          type: string
+          example: Pizza Napolitana
+        price:
+          type: number
+          example: 400
+        img_url:
+          type: string
+          example: https://via.placeholder.com/683
+        description:
+          type: string
+          example: Pizza napolitana
+    Productos:
+      type: array
+      items:
+        $ref: "#/components/schemas/Producto"
+    OrdenProducto:
+      type: object
+      properties:
+        order_id:
+          type: integer
+          example: 10
+        product_id:
+          type: integer
+          example: 7
+        product_amount:
+          type: integer
+          example: 30
+        name:
+          type: string
+          example: Pizza Napolitana
+        price:
+          type: number
+          example: 1400
+        img_url:
+          type: string
+          example: https://via.placeholder.com/888
+        description:
+          type: string
+          example: Pizza Napolitana
+    OrderProductos:
+      type: array
+      items:
+        $ref: "#/components/schemas/OrdenProducto"
+    ListaOrdenes:
+      type: object
+      properties:
+        order_id:
+          type: integer
+          example: 3
+        status:
+          type: string
+          example: delivered
+        date:
+          type: string
+          format: date-time
+          example: "2020-01-10 16:40"
+        description:
+          type: string
+          example: 30x Pizza Napolitana
+        payment_method:
+          type: string
+          example: cash
+        total:
+          type: integer
+          example: 1400
+        user_id:
+          type: integer
+          example: 3
+        username:
+          type: string
+          example: rolandoF
+        full_name:
+          type: string
+          example: "Rolando Fernandez"
+        email:
+          type: string
+          example: rolandof@gmail.com
+        phone:
+          type: integer
+          example: 1162021087
+        delivery_address:
+          type: string
+          example: Coronel Diaz 4000
+    Ordenes:
+      type: array
+      items:
+        $ref: "#/components/schemas/ListaOrdenes"    
+    OrdenPorID:
+      type: object
+      properties:
+        order_id:
+          type: integer
+          example: 3
+        status:
+          type: string
+          example: delivered
+        date:
+          type: string
+          format: date-time
+          example: "2020-01-10 16:40"
+        description:
+          type: string
+          example: 30x Pizza Napolitana
+        payment_method:
+          type: string
+          example: cash
+        total:
+          type: integer
+          example: 1400
+        user_id:
+          type: integer
+          example: 3
+        username:
+          type: string
+          example: rolandoF
+        full_name:
+          type: string
+          example: "Rolando Fernandez"
+        email:
+          type: string
+          example: rolandof@gmail.com
+        phone:
+          type: integer
+          example: 1162021087
+        delivery_address:
+          type: string
+          example: Coronel Diaz 4000
+        products:
+          $ref: "#/components/schemas/OrderProductos"
+    OrdenesPorID:
+      type: array
+      items:
+        $ref: "#/components/schemas/OrdenPorID"
+    NuevaOrden:
+      type: object
+      properties:
+        payment_method:
+          type: string
+          example: cash
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              product_id:
+                type: integer
+                example: 4
+              amount:
+                type: integer
+                example: 6
+    Token:
+      type: object
+      properties:
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Algo salio mal.."
+      required:
+        - error
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  #Respuestas
+  responses:
+    NotAdmin:
+      description: No es admin
+    Default:
+      description: Algo salio mal..
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: La busqueda no trajo resultados
+    Unauthorized:
+      description: No autorizado
+      content:
+        application/json:
+          
+              
+          examples:
+            Invalidacion de roles:
+              summary: No es admin, acceso denegado
+              value: No es admin, acceso denegado
+   
+
+security:
+  - bearerAuth: []
